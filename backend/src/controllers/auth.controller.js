@@ -3,7 +3,7 @@ const User = require('../models/user.model.js');
 const Otp = require('../models/otp.model.js');
 const bcrypt = require('bcryptjs');
 const cloudinary = require('../lib/cloudinary.js');
-const { sendOtpEmail, generateOtp } = require('../services/emailOtpService.js');
+const { sendOtpEmail, generateOtp } = require('../services/brevoEmailService.js');
 
 const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -123,18 +123,22 @@ const checkAuth = (req, res) => {
 
 const sendOtp = async (req, res) => {
   const { email } = req.body;
-  console.log("OTP request received", req.body.email);
+  console.log("📨 OTP request received for:", email);
+  
   try {
     if (!email) {
+      console.log("❌ No email provided");
       return res.status(400).json({ success: false, message: "Email is required" });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.log("❌ Email already exists:", email);
       return res.status(400).json({ success: false, message: "Email already exists" });
     }
 
     const otp = generateOtp();
+    console.log("🔢 Generated OTP for", email);
     
     // Delete any existing OTP for this email
     await Otp.deleteMany({ email });
@@ -146,17 +150,25 @@ const sendOtp = async (req, res) => {
       expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes from now
     });
     
-    // Send response immediately
-    res.status(200).json({ success: true });
+    console.log("💾 OTP saved to database for", email);
     
-    // Send email asynchronously (don't await)
-    sendOtpEmail(email, otp).catch(error => {
-      console.error('Email send failed (async):', error.message);
-    });
+    // Send email and handle result
+    try {
+      const emailResult = await sendOtpEmail(email, otp);
+      console.log("✅ OTP email sent successfully to", email);
+      res.status(200).json({ success: true, messageId: emailResult.messageId });
+    } catch (emailError) {
+      console.error("❌ Email sending failed:", emailError.message);
+      // Still return success since OTP is saved, user can retry
+      res.status(200).json({ 
+        success: true, 
+        warning: "OTP saved but email delivery may have failed. Please check your email or try again." 
+      });
+    }
     
   } catch (error) {
-    console.log("Error in sendOtp controller", error.message);
-    res.status(500).json({ success: false, error: "email_send_failed" });
+    console.error("❌ Error in sendOtp controller:", error.message);
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
 

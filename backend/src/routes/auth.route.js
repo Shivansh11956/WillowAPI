@@ -1,7 +1,7 @@
 const express = require('express');
 const { checkAuth, login, logout, signup, updateProfile, sendOtp, verifyOtp } = require('../controllers/auth.controller.js');
 const { protectRoute } = require('../middleware/auth.middleware.js');
-const { sendOtpEmail, generateOtp } = require('../services/emailOtpService.js');
+const { sendOtpEmail, generateOtp } = require('../services/brevoEmailService.js');
 
 const router = express.Router();
 
