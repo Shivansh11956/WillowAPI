@@ -41,7 +41,7 @@ const sendOtpEmail = async (email, otp) => {
     console.log('Brevo SMTP verified');
     
     const mailOptions = {
-      from: 'Willow <no-reply@brevo.com>', // Safe shared sender
+      from: '"Willow" <creatusest1@gmail.com>', // Safe shared sender
       to: email,
       subject: 'Your Willow OTP Code',
       html: `
