@@ -15,6 +15,7 @@ const sendOtpEmail = async (email, otp) => {
   console.log(`Generated OTP: ${otp}`);
   
   if (!process.env.BREVO_API_KEY) {
+    console.error('Missing BREVO_API_KEY');
     throw new Error('Missing BREVO_API_KEY configuration');
   }
   
@@ -42,6 +43,7 @@ const sendOtpEmail = async (email, otp) => {
     };
     
     console.log('Sending email via Brevo API...');
+    console.log('API Key present:', !!process.env.BREVO_API_KEY);
     
     const response = await axios.post(
       'https://api.brevo.com/v3/smtp/email',
@@ -50,7 +52,8 @@ const sendOtpEmail = async (email, otp) => {
         headers: {
           'api-key': process.env.BREVO_API_KEY,
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 10000
       }
     );
     
@@ -59,7 +62,10 @@ const sendOtpEmail = async (email, otp) => {
     return { success: true, messageId: response.data.messageId };
     
   } catch (error) {
-    console.error(`Email send failed for ${email}:`, error.response?.data || error.message);
+    console.error('Brevo API Error Details:');
+    console.error('Status:', error.response?.status);
+    console.error('Data:', error.response?.data);
+    console.error('Message:', error.message);
     throw new Error(`Email delivery failed: ${error.response?.data?.message || error.message}`);
   }
 };
