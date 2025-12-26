@@ -1,6 +1,8 @@
-# Full Stack Realtime Chat App with AI Moderation
+# Willow - Safe chat starts here
 
 A modern realtime chat application built with MERN stack featuring advanced AI-powered content moderation, friend request system, and comprehensive user management.
+
+**Live Demo**: [Try Willow Now](https://willow-production-9184.up.railway.app/)
 
 ## Features
 
@@ -14,6 +16,48 @@ A modern realtime chat application built with MERN stack featuring advanced AI-p
 - **State Management**: Zustand for global state
 - **Error Handling**: Comprehensive error handling on client and server
 - **Production Ready**: Optimized for deployment
+
+## Willow Walkthrough
+
+### Welcome Landing Page
+![Landing Page](backend/public/screenshots/s1.png)
+*Clean and modern landing page showcasing Willow's core features and benefits*
+
+### Account Registration
+![Create Account](backend/public/screenshots/s2.png)
+*Streamlined signup process with email validation and secure authentication*
+
+### Email OTP Verification
+![OTP Verification](backend/public/screenshots/s3.png)
+*Two-factor authentication ensuring account security with email-based OTP*
+
+### Profile Customization
+![Profile Setup](backend/public/screenshots/s4.png)
+*Personalize your profile with custom avatars and personal information*
+
+### Friend Discovery
+![Discover Friends](backend/public/screenshots/s5.png)
+*Find and connect with users through intelligent search and friend requests*
+
+### AI-Powered Content Moderation
+![Chat Moderation](backend/public/screenshots/s6.png)
+*Real-time message filtering with AI suggestions for safer communication*
+
+### Rich Media Messaging
+![Chat Interface](backend/public/screenshots/s7.png)
+*Support for text messages, images, and multimedia content sharing*
+
+### AI Chat Assistant
+![AI Assistance](backend/public/screenshots/s8.png)
+*Integrated AI assistant for enhanced user experience and support*
+
+### Internationalization & UI Customization
+![Language Options](backend/public/screenshots/s9.png)
+*Dynamic UI adaptation featuring multi-language support and 30+ customizable themes*
+
+### Hindi Language Interface
+![Hindi UI](backend/public/screenshots/s10.png)
+*Complete Hindi language support with native UI elements and cultural localization*
 
 ## Architecture Overview
 
@@ -278,6 +322,3 @@ Visit `http://localhost:5001/health` to verify:
 - Check spam folders for OTP emails
 - Ensure EMAIL_USER and EMAIL_PASS are correct
 
-## License
-
-This project is proprietary software. All rights reserved.
