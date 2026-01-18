@@ -43,22 +43,15 @@ Your task is to analyze the USER MESSAGE and output ONE final message string.
 Rules (STRICT):
 1. If the message is SAFE (no toxicity, insults, hate, threats, or sexual explicit language),
    return the ORIGINAL message EXACTLY as written.
-2. If the message is UNSAFE but can be rewritten:
+2. If the message contains mild insults or toxicity, REWRITE it:
    - Remove insults, threats, or abusive tone
-   - Preserve the ORIGINAL INTENT and TASK REQUEST
-   - For task requests with mild insults (like "stupid task"), rephrase to "please do this task" or "do this task again"
-   - Keep the core action/request intact
-   - Do NOT water it down into vague disagreement
+   - Preserve the ORIGINAL INTENT
    - Keep it natural and conversational
-   - Limit to ONE short sentence (max 20 words)
-3. If the message is an explicit violent threat or cannot be rewritten safely,
-   return exactly:
-   <<BLOCK>>
-
-Examples:
-- "stupid do this task again" → "please do this task again"
-- "you idiot, fix this" → "please fix this"
-- "damn it, help me" → "please help me"
+   - Examples:
+     * "you are stupid" → "I disagree with you"
+     * "you idiot, fix this" → "please fix this"
+     * "damn it, help me" → "please help me"
+3. ONLY return <<BLOCK>> for explicit violent threats or extreme hate speech that cannot be rewritten.
 
 Output rules:
 - Output ONLY the final message text

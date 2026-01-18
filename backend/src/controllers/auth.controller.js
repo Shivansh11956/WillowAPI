@@ -1,229 +1,127 @@
-const { generateToken } = require('../lib/utils.js');
-const User = require('../models/user.model.js');
-const Otp = require('../models/otp.model.js');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const cloudinary = require('../lib/cloudinary.js');
-const { sendOtpEmail, generateOtp } = require('../services/brevoEmailService.js');
+const User = require('../models/user.model');
+const OTP = require('../models/otp.model');
+const { sendOTPEmail } = require('../services/emailService');
 
 const signup = async (req, res) => {
-  const { fullName, email, password } = req.body;
   try {
-    if (!fullName || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
     }
 
-    const user = await User.findOne({ email });
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    if (user) return res.status(400).json({ message: "Email already exists" });
+    // Save OTP
+    await OTP.create({ email, otp, expiresAt });
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Send OTP via email
+    const emailSent = await sendOTPEmail(email, otp);
+    
+    if (!emailSent) {
+      console.log(`OTP for ${email}: ${otp}`);
+    }
 
-    const newUser = new User({
-      fullName,
+    // Store password temporarily (will be saved after OTP verification)
+    res.json({ 
+      message: 'OTP sent to your email',
+      tempData: { email, password }
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ error: 'Failed to signup' });
+  }
+};
+
+const verifySignup = async (req, res) => {
+  try {
+    const { email, password, otp } = req.body;
+    
+    if (!email || !password || !otp) {
+      return res.status(400).json({ error: 'Email, password and OTP are required' });
+    }
+
+    // Find valid OTP
+    const otpRecord = await OTP.findOne({
       email,
-      password: hashedPassword,
+      otp,
+      used: false,
+      expiresAt: { $gt: new Date() }
     });
 
-    if (newUser) {
-      // generate jwt token here
-      generateToken(newUser._id, res);
-      await newUser.save();
-
-      res.status(201).json({
-        _id: newUser._id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        profilePic: newUser.profilePic,
-        createdAt: newUser.createdAt,
-      });
-    } else {
-      res.status(400).json({ message: "Invalid user data" });
+    if (!otpRecord) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
     }
+
+    // Mark OTP as used
+    otpRecord.used = true;
+    await otpRecord.save();
+
+    // Hash password and create user
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({ 
+      email, 
+      password: hashedPassword 
+    });
+
+    const token = crypto.randomBytes(32).toString('hex');
+    
+    res.json({
+      message: 'Signup successful',
+      user: { id: user._id, email: user.email },
+      token
+    });
   } catch (error) {
-    console.log("Error in signup controller", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error('Verify signup error:', error);
+    res.status(500).json({ error: 'Failed to verify signup' });
   }
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
   try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
     const user = await User.findOne({ email });
-
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ error: 'Invalid credentials' });
     }
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
-    if (!isPasswordCorrect) {
-      return res.status(400).json({ message: "Invalid credentials" });
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(400).json({ error: 'Invalid credentials' });
     }
 
-    generateToken(user._id, res);
+    user.lastLogin = new Date();
+    await user.save();
 
-    res.status(200).json({
-      _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      profilePic: user.profilePic,
-      createdAt: user.createdAt,
+    const token = crypto.randomBytes(32).toString('hex');
+    
+    res.json({
+      message: 'Login successful',
+      user: { id: user._id, email: user.email },
+      token
     });
   } catch (error) {
-    console.log("Error in login controller", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Failed to login' });
   }
 };
 
-const logout = (req, res) => {
-  try {
-    res.cookie("jwt", "", { maxAge: 0 });
-    res.status(200).json({ message: "Logged out successfully" });
-  } catch (error) {
-    console.log("Error in logout controller", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
+const logout = async (req, res) => {
+  res.json({ message: 'Logged out successfully' });
 };
 
-const updateProfile = async (req, res) => {
-  try {
-    const { profilePic } = req.body;
-    const userId = req.user._id;
-
-    if (!profilePic) {
-      return res.status(400).json({ message: "Profile pic is required" });
-    }
-
-    const uploadResponse = await cloudinary.uploader.upload(profilePic);
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { profilePic: uploadResponse.secure_url },
-      { new: true }
-    );
-
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    console.log("error in update profile:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-const checkAuth = (req, res) => {
-  try {
-    res.status(200).json(req.user);
-  } catch (error) {
-    console.log("Error in checkAuth controller", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-const sendOtp = async (req, res) => {
-  const { email } = req.body;
-  console.log(`OTP request received for ${email}`);
-  
-  try {
-    if (!email) {
-      console.log('No email provided');
-      return res.status(400).json({ success: false, message: "Email is required" });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      console.log(`Email already exists: ${email}`);
-      return res.status(400).json({ success: false, message: "Email already exists" });
-    }
-
-    const otp = generateOtp();
-    console.log(`Generated OTP for ${email}`);
-    
-    // Delete any existing OTP for this email
-    await Otp.deleteMany({ email });
-    
-    // Save new OTP with expiresAt field
-    await Otp.create({ 
-      email, 
-      otp,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes from now
-    });
-    
-    console.log(`OTP saved to database for ${email}`);
-    
-    // Send email with proper error handling
-    try {
-      const emailResult = await sendOtpEmail(email, otp);
-      console.log(`OTP email sent successfully to ${email}`);
-      res.status(200).json({ success: true, messageId: emailResult.messageId });
-    } catch (emailError) {
-      console.error(`Email sending failed: ${emailError.message}`);
-      // Return error since email is critical for OTP flow
-      res.status(500).json({ 
-        success: false, 
-        error: "Email delivery failed",
-        message: "Unable to send OTP email. Please try again." 
-      });
-    }
-    
-  } catch (error) {
-    console.error(`Error in sendOtp controller: ${error.message}`);
-    res.status(500).json({ success: false, error: "Internal server error" });
-  }
-};
-
-const verifyOtp = async (req, res) => {
-  const { email, otp, fullName, password } = req.body;
-  try {
-    if (!email || !otp || !fullName || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
-    }
-
-    // Verify OTP
-    const otpRecord = await Otp.findOne({ email, otp });
-    if (!otpRecord) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
-    }
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already exists" });
-    }
-
-    // Create user
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newUser = new User({
-      fullName,
-      email,
-      password: hashedPassword,
-    });
-
-    await newUser.save();
-    
-    // Delete OTP after successful verification
-    await Otp.deleteOne({ email, otp });
-
-    generateToken(newUser._id, res);
-
-    res.status(201).json({
-      _id: newUser._id,
-      fullName: newUser.fullName,
-      email: newUser.email,
-      profilePic: newUser.profilePic,
-      createdAt: newUser.createdAt,
-    });
-  } catch (error) {
-    console.log("Error in verifyOtp controller", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-module.exports = { signup, login, logout, updateProfile, checkAuth, sendOtp, verifyOtp };
+module.exports = { signup, verifySignup, login, logout };

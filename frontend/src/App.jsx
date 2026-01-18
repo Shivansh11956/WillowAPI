@@ -1,62 +1,52 @@
-import Navbar from "./components/Navbar";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './lib/auth';
+import Layout from './components/Layout';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import ApiKeys from './pages/ApiKeys';
+import Test from './pages/Test';
+import Analytics from './pages/Analytics';
+import Docs from './pages/Docs';
 
-import HomePage from "./pages/HomePage";
-import SignUpPage from "./pages/SignUpPage";
-import LoginPage from "./pages/LoginPage";
-import SettingsPage from "./pages/SettingsPage";
-import ProfilePage from "./pages/ProfilePage";
-import DiscoverPage from "./pages/DiscoverPage";
-import LandingPage from "./pages/LandingPage";
-
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useAuthStore } from "./store/useAuthStore";
-import { useThemeStore } from "./store/useThemeStore";
-import { useEffect } from "react";
-
-import { Loader } from "lucide-react";
-import { Toaster } from "react-hot-toast";
-
-const App = () => {
-  const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
-  const { theme } = useThemeStore();
-  const location = useLocation();
-
-  console.log({ onlineUsers });
-
-  useEffect(() => {
-    if (
-      location.pathname !== "/signup" &&
-      location.pathname !== "/verify-otp"
-    ) {
-      checkAuth();
-    }
-  }, [location.pathname, checkAuth]);
-
-  console.log({ authUser });
-
-  if (isCheckingAuth && !authUser)
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader className="size-10 animate-spin" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
+  }
+  
+  return user ? children : <Navigate to="/login" />;
+}
 
+function AppRoutes() {
+  const { user } = useAuth();
+  
   return (
-    <div data-theme={theme}>
-      {authUser && <Navbar />}
-
-      <Routes>
-        <Route path="/" element={authUser ? <HomePage /> : <LandingPage />} />
-        <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
-        <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
-        <Route path="/discover" element={authUser ? <DiscoverPage /> : <Navigate to="/login" />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-
-      <Toaster />
-    </div>
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
+      <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+        <Route index element={<Navigate to="/dashboard" />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="api-keys" element={<ApiKeys />} />
+        <Route path="test" element={<Test />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="docs" element={<Docs />} />
+      </Route>
+    </Routes>
   );
-};
-export default App;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </AuthProvider>
+  );
+}

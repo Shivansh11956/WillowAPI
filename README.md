@@ -1,359 +1,166 @@
-# Willow - Safe chat starts here
+# Content Moderation API
 
-A modern realtime chat application built with MERN stack featuring advanced AI-powered content moderation, friend request system, and comprehensive user management.
-
-**Live Demo**: [Try Willow Now](https://willow-3osi.onrender.com/)
-
-**Video Demo**: [Watch Now](https://youtu.be/zHzSBQuv7fI)
+AI-powered content moderation API with multi-provider fallback system and web dashboard.
 
 ## Features
 
-- **Tech Stack**: MERN + Socket.io + TailwindCSS + DaisyUI
-- **Authentication**: JWT-based auth with email OTP verification
-- **Real-time Messaging**: Socket.io powered instant communication
-- **Friend Request System**: Complete user discovery and friend management
-- **AI Content Moderation**: Multi-provider toxicity detection and message filtering
-- **Smart Filtering**: Fallback protection with rule-based filtering
-- **User Status**: Online/offline status tracking
-- **State Management**: Zustand for global state
-- **Error Handling**: Comprehensive error handling on client and server
-- **Production Ready**: Optimized for deployment
+- **Multi-Provider AI**: Gemini → Groq → Rule-based fallback
+- **Smart Rewriting**: Preserves intent while removing toxicity
+- **Web Dashboard**: Email OTP login, API key management, analytics
+- **API Key Authentication**: Secure access control
+- **Usage Analytics**: Track API usage and performance
+- **Production Ready**: Robust error handling and logging
 
-## Willow Walkthrough
+## Quick Start
 
-### Welcome Landing Page
-<img src="backend/public/screenshots/S1.png"
-     alt="Landing Page"
-     style="border:2px solid #d0d7de; border-radius:10px; margin:12px 0;" />
-
-*Clean and modern landing page showcasing Willow's core features and benefits*
-
-### Account Registration
-<img src="backend/public/screenshots/S2.png"
-     alt="Account Registration"
-     style="border:2px solid #d0d7de; border-radius:10px; margin:12px 0;" />
-
-*Streamlined signup process with email validation and secure authentication*
-
-### Email OTP Verification
-<img src="backend/public/screenshots/S3.png"
-     alt="OTP Verification"
-     style="border:2px solid #d0d7de; border-radius:10px; margin:12px 0;" />
-
-*Two-factor authentication ensuring account security with email-based OTP*
-
-### Profile Customization
-<img src="backend/public/screenshots/S4.png"
-     alt="Profile Setup"
-     style="border:2px solid #d0d7de; border-radius:10px; margin:12px 0;" />
-
-*Personalize your profile with custom avatars and personal information*
-
-### Friend Discovery
-<img src="backend/public/screenshots/S5.png"
-     alt="Friend Discovery"
-     style="border:2px solid #d0d7de; border-radius:10px; margin:12px 0;" />
-
-*Find and connect with users through intelligent search and friend requests*
-
-### AI-Powered Content Moderation
-<img src="backend/public/screenshots/S6.png"
-     alt="AI Content Moderation"
-     style="border:2px solid #d0d7de; border-radius:10px; margin:12px 0;" />
-
-*Real-time message filtering with AI suggestions for safer communication*
-
-### Rich Media Messaging
-<img src="backend/public/screenshots/S7.png"
-     alt="Rich Media Messaging"
-     style="border:2px solid #d0d7de; border-radius:10px; margin:12px 0;" />
-
-*Support for text messages, images, and multimedia content sharing*
-
-### AI Chat Assistant
-<img src="backend/public/screenshots/S8.png"
-     alt="AI Chat Assistant"
-     style="border:2px solid #d0d7de; border-radius:10px; margin:12px 0;" />
-
-*Integrated AI assistant for enhanced user experience and support*
-
-### Internationalization & UI Customization
-<img src="backend/public/screenshots/S9.png"
-     alt="UI Customization"
-     style="border:2px solid #d0d7de; border-radius:10px; margin:12px 0;" />
-
-*Dynamic UI adaptation featuring multi-language support and 30+ customizable themes*
-
-### Hindi Language Interface
-<img src="backend/public/screenshots/S10.png"
-     alt="Hindi Interface"
-     style="border:2px solid #d0d7de; border-radius:10px; margin:12px 0;" />
-
-*Complete Hindi language support with native UI elements and cultural localization*
-
-## Architecture Overview
-
-### Backend Structure
-```
-backend/
-├── src/
-│   ├── controllers/        # Route handlers
-│   ├── models/            # MongoDB schemas
-│   ├── services/          # Business logic
-│   ├── routes/            # API endpoints
-│   ├── middleware/        # Authentication middleware
-│   ├── lib/              # Utilities (socket, db, cloudinary)
-│   └── index.js          # Server entry point
-├── package.json
-└── .env.example
-```
-
-### Frontend Structure
-```
-frontend/
-├── src/
-│   ├── components/        # Reusable UI components
-│   ├── pages/            # Route components
-│   ├── store/            # Zustand state management
-│   ├── lib/              # API utilities
-│   └── App.jsx
-├── package.json
-└── vite.config.js
-```
-
-## Friend Request System
-
-### Core Features
-- **User Discovery**: Real-time user search functionality
-- **Request Management**: Send, cancel, accept, and reject friend requests
-- **Real-time Notifications**: Instant updates via Socket.io
-- **Privacy Controls**: Chat access limited to friends only
-- **Rate Limiting**: Spam prevention (5 requests per minute)
-
-### Friend Request Workflow
-1. User searches for other users in Discovery page
-2. Sends friend request with optional message
-3. Recipient receives real-time notification
-4. Recipient can accept or reject the request
-5. Upon acceptance, both users gain chat access
-
-### API Endpoints
+### Environment Setup
 
 ```bash
-# Send friend request
-POST /api/friends/request
-Content-Type: application/json
-{
-  "recipientId": "user_id",
-  "message": "Hi there!"
-}
+# Required AI API Keys
+GEMINI_KEY_1=your_gemini_key_1
+GEMINI_KEY_2=your_gemini_key_2
+GROQ_API_KEY=your_groq_key
 
-# Respond to friend request
-POST /api/friends/request/respond
-Content-Type: application/json
-{
-  "requestId": "request_id",
-  "action": "accept"
-}
+# Database
+MONGODB_URI=mongodb://localhost:27017/moderation-api
 
-# Get friends list
-GET /api/friends/list
-
-# Search users
-GET /api/users/search?q=username
-```
-
-### Socket Events
-- `friend:request_sent` - New friend request received
-- `friend:request_update` - Request status changed
-- `friends:list_updated` - Friend list modified
-
-## AI Moderation System
-
-### Moderation Pipeline
-1. **Message Interception**: All messages analyzed before delivery
-2. **Multi-Provider Detection**: Gemini, Groq, and Grok API integration
-3. **Toxicity Analysis**: Advanced AI models detect harmful content
-4. **Smart Rephrasing**: Suggests alternative phrasing for flagged content
-5. **Fallback Protection**: Rule-based filtering when AI services unavailable
-6. **Audit Logging**: Complete moderation event tracking
-
-### Socket Events
-- `send_message` - Client sends message for moderation
-- `newMessage` - Clean messages broadcasted to recipients
-- `message_blocked` - Toxic messages blocked with suggestions
-- `message_sent` - Message delivery confirmation
-- `message_error` - Error handling for failed processing
-
-## Environment Configuration
-
-### Required Environment Variables
-
-```bash
-# Database & Server
-MONGODB_URI=mongodb://localhost:27017/willow
+# Server
 PORT=5001
-JWT_SECRET=your_jwt_secret_key
-
-# Cloudinary (Image Upload)
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-
-# AI Moderation APIs
-GEMINI_KEY_1=AIzaSyAAA...
-GEMINI_KEY_2=AIzaSyBBB...
-GEMINI_KEY_3=AIzaSyCCC...
-GEMINI_API_KEY=AIzaSyAAA...
-GROK_API_KEY=gsk_your_grok_key
-GROQ_API_KEY=gsk_your_groq_key
-GROQ_API_URL=https://api.groq.com/openai/v1/chat/completions
-
-# Email Authentication (Brevo)
-BREVO_API_KEY=your_brevo_api_key
-BREVO_SENDER_EMAIL=your_verified_sender@domain.com
-BREVO_SENDER_NAME=Willow
-
-NODE_ENV=production
+NODE_ENV=development
 ```
 
-### API Key Setup
+### Installation
 
-**Google Gemini API Keys**
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create multiple API keys for load balancing
-3. Add keys as GEMINI_KEY_1, GEMINI_KEY_2, etc.
-
-**Groq API Key**
-1. Go to [Groq Console](https://console.groq.com/keys)
-2. Generate new API key
-3. Set as GROQ_API_KEY
-
-**Grok API Key**
-1. Access [xAI Console](https://console.x.ai)
-2. Create API key for Grok integration
-3. Set as GROK_API_KEY
-
-**Brevo Email Configuration**
-1. Create account at [Brevo](https://www.brevo.com)
-2. Generate API key from account settings
-3. Verify sender email domain
-4. Set BREVO_API_KEY, BREVO_SENDER_EMAIL, and BREVO_SENDER_NAME
-
-## Installation & Setup
-
-### Install Dependencies
 ```bash
-npm install
-cd backend && npm install
-cd ../frontend && npm install
+npm run install-deps
+npm run dev          # Start both API and dashboard
 ```
 
-### Build Application
+### Access Points
+
+- **API**: http://localhost:5001
+- **Dashboard**: http://localhost:5173
+- **Health Check**: http://localhost:5001/health
+
+## Dashboard Features
+
+### 🔐 Authentication
+- Email-based OTP login (no passwords)
+- Secure session management
+
+### 📊 Dashboard
+- Real-time API usage statistics
+- Success rates and performance metrics
+- System health monitoring
+
+### 🔑 API Key Management
+- Create/delete API keys
+- Usage tracking per key
+- Copy keys securely
+
+### 📈 Analytics
+- Daily request charts
+- Model usage breakdown
+- Moderation action statistics
+- Response time metrics
+
+### 📚 Documentation
+- Interactive API documentation
+- Code examples and SDKs
+- Rate limits and guidelines
+
+## API Usage
+
+### Authentication
+
+All requests require an API key in the Authorization header:
+
 ```bash
-npm run build
+Authorization: Bearer your_api_key_here
 ```
 
-### Development Mode
+### Moderate Content
+
 ```bash
-# Backend
-cd backend && npm run dev
+POST /api/v1/moderate
+Content-Type: application/json
 
-# Frontend
-cd frontend && npm run dev
+{
+  "text": "Your message to moderate",
+  "userId": "optional_user_id",
+  "conversationId": "optional_conversation_id"
+}
 ```
 
-### Production Mode
+### Response Format
+
+**Safe Content:**
+```json
+{
+  "blocked": false,
+  "original": "Hello world",
+  "moderated": "Hello world",
+  "rewritten": false,
+  "model": "gemini"
+}
+```
+
+**Rewritten Content:**
+```json
+{
+  "blocked": false,
+  "original": "you are stupid",
+  "moderated": "I disagree with you",
+  "rewritten": true,
+  "model": "gemini"
+}
+```
+
+**Blocked Content:**
+```json
+{
+  "blocked": true,
+  "reason": "Content violates community guidelines",
+  "original": "violent threat message"
+}
+```
+
+## Health Check
+
 ```bash
-npm start
+GET /health
 ```
 
-## Testing
+Returns service status and AI provider availability.
 
-### AI Moderation Testing
-```bash
-cd backend
-node test-moderation.js
-```
+## Moderation Pipeline
 
-### Email OTP Testing
-```bash
-curl -X POST http://localhost:5001/api/auth/send-otp \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com"}'
-```
+1. **Gemini AI** (Primary) - Advanced content analysis
+2. **Groq AI** (Fallback) - Secondary moderation
+3. **Rule-based Filter** (Final fallback) - Keyword matching
 
-### Health Check
-Visit `http://localhost:5001/health` to verify:
-- Database connectivity
-- AI API configuration status
-- System health metrics
+## Rate Limits
 
-## Database Models
+- Gemini: 20 requests per key per day
+- Groq: No built-in limits
+- Automatic key rotation and fallback
 
-### User Model
-- Profile information and authentication data
-- Friend relationships and status
-- Account settings and preferences
+## Logging
 
-### Message Model
-- Chat message content and metadata
-- Sender/receiver information
-- Timestamps and delivery status
+All moderation decisions are logged to MongoDB with:
+- Original content
+- Moderation decision
+- AI model used
+- Timestamps
+- User/conversation context
 
-### Friend Request Model
-- Request status and lifecycle tracking
-- Sender/recipient relationship data
-- Request messages and timestamps
+## Production Deployment
 
-### Moderation Log Model
-- AI moderation event tracking
-- Toxicity scores and actions taken
-- Original content and suggested alternatives
-
-## Deployment
-
-### Supported Platforms
-- Heroku
+The API is ready for deployment on:
 - Railway
-- Vercel
-- Netlify
-- AWS Amplify
-- DigitalOcean App Platform
+- Heroku  
+- AWS
+- Google Cloud
+- Any Node.js hosting platform
 
-### Deployment Steps
-1. Set up environment variables in platform dashboard
-2. Configure build commands: `npm run build`
-3. Set start command: `npm start`
-4. Deploy from GitHub repository (private repos supported)
-
-### Production Considerations
-- Enable MongoDB Atlas for database hosting
-- Configure CORS for production domains
-- Set up SSL certificates
-- Monitor AI API usage and quotas
-- Implement proper logging and monitoring
-
-## Troubleshooting
-
-**AI Service Failures**
-- Application automatically falls back to rule-based filtering
-- Check `/health` endpoint for API status
-- Verify API keys and quotas
-
-**Connection Issues**
-- Ensure correct port configuration
-- Check firewall settings
-- Verify Socket.io connection parameters
-
-**Database Problems**
-- Confirm MongoDB connection string
-- Check database permissions
-- Monitor connection pool status
-
-**Email Delivery**
-- Verify Brevo API key is valid
-- Check spam folders for OTP emails
-- Ensure sender email is verified in Brevo
-- Monitor Brevo dashboard for delivery status
-
+Set environment variables and deploy the `backend` directory.

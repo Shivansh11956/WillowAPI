@@ -1,29 +1,21 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path');
 const { connectDB } = require('./lib/db.js');
+const moderationRoutes = require('./routes/moderation.route.js');
 const authRoutes = require('./routes/auth.route.js');
-const messageRoutes = require('./routes/message.route.js');
-const aiRoutes = require('./routes/ai.route.js');
-const friendRoutes = require('./routes/friend.route.js');
-const { app, server } = require('./lib/socket.js');
+const keysRoutes = require('./routes/keys.route.js');
+const analyticsRoutes = require('./routes/analytics.route.js');
+
+const app = express();
 
 dotenv.config();
 
 const PORT = parseInt(process.env.PORT) || 5001;
 
-app.use(express.json());
-app.use(cookieParser());
-app.use(
-  cors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? true 
-      : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
-    credentials: true,
-  })
-);
+app.use(express.json({ limit: '10mb' }));
+app.use(cors());
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -32,37 +24,44 @@ app.get('/health', (req, res) => {
   
   res.status(200).json({
     status: 'OK',
+    service: 'Content Moderation API',
     timestamp: new Date().toISOString(),
-    services: {
-      database: 'connected',
-      ai_chat: {
-        gemini_keys: geminiKeys > 0 ? `${geminiKeys} configured` : 'missing',
-        groq_key: groqKey > 0 ? 'configured' : 'missing',
-        weather_api: process.env.WEATHER_API_KEY ? 'configured' : 'missing'
-      },
-      legacy_moderation: {
-        huggingface: process.env.HF_TOKEN ? 'configured' : 'missing',
-        gemini: geminiKeys > 0 ? 'configured' : 'missing'
-      }
+    moderation: {
+      gemini_keys: geminiKeys > 0 ? `${geminiKeys} configured` : 'missing',
+      groq_key: groqKey > 0 ? 'configured' : 'missing',
+      fallback_filter: 'active'
     }
   });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/messages", messageRoutes);
-app.use("/api/ai", aiRoutes);
-app.use("/api/friends", friendRoutes);
-app.use("/api/users", friendRoutes);
+app.use('/api/v1', moderationRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/keys', keysRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../public")));
-
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../public", "index.html"));
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
   });
 }
 
-server.listen(PORT, () => {
-  console.log("server is running on PORT:" + PORT);
+// API documentation endpoint
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Content Moderation API',
+    version: '1.0.0',
+    endpoints: {
+      'POST /api/v1/moderate': 'Moderate text content',
+      'GET /health': 'Service health check'
+    },
+    documentation: 'https://docs.example.com'
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`Content Moderation API running on PORT: ${PORT}`);
   connectDB();
 });
