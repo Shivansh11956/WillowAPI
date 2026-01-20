@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: willow-api
+    env: node
+    buildCommand: npm run build:full
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production

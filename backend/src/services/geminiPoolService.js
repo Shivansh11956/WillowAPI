@@ -3,7 +3,7 @@ const axios = require('axios');
 // Dynamic key loading from .env
 const keys = [];
 const meta = [];
-let lastUsedIndex = -1;
+let lastUsedIndex = -1; // Will be set randomly on first load
 let lastResetDate = null;
 
 // Load GEMINI_KEY_* from process.env
@@ -20,6 +20,11 @@ function loadGeminiKeys() {
       }
     }
   });
+  
+  // Set random starting position based on actual number of keys
+  if (keys.length > 0 && lastUsedIndex >= keys.length) {
+    lastUsedIndex = Math.floor(Math.random() * keys.length);
+  }
 }
 
 // Reset daily counters if UTC date changed
