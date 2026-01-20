@@ -6,8 +6,6 @@ A production version of this API is available at:
 
  **https://willowapi-lj3e.onrender.com/**
 
-[![Live](https://img.shields.io/website?down_color=red&down_message=offline&up_color=green&up_message=online&url=https://willowapi-lj3e.onrender.com/)](https://willowapi-lj3e.onrender.com/)
-
 ## Features
 
 ### **Multi-Provider AI Moderation**
