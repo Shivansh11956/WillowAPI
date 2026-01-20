@@ -2,6 +2,12 @@
 
 ### AI-powered content moderation API with multi-provider fallback system and comprehensive web dashboard
 
+A production version of this API is available at:
+
+ **https://willowapi-lj3e.onrender.com/**
+
+[![Live](https://img.shields.io/website?down_color=red&down_message=offline&up_color=green&up_message=online&url=https://willowapi-lj3e.onrender.com/)](https://willowapi-lj3e.onrender.com/)
+
 ## Features
 
 ### **Multi-Provider AI Moderation**
@@ -84,9 +90,10 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 ### Access Points
 
-- **Dashboard**: http://localhost:5173
-- **API**: http://localhost:5001
-- **Health Check**: http://localhost:5001/health
+- **Live Demo**: https://willowapi-lj3e.onrender.com/
+- **Dashboard**: http://localhost:5173 (local)
+- **API**: http://localhost:5001 (local)
+- **Health Check**: http://localhost:5001/health (local)
 
 ## API Documentation
 
